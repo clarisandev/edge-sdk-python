@@ -1,0 +1,29 @@
+inorbit\_edge package
+=====================
+
+Submodules
+----------
+
+inorbit\_edge.example module
+----------------------------
+
+.. automodule:: inorbit_edge.example
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+inorbit\_edge.robot module
+--------------------------
+
+.. automodule:: inorbit_edge.robot
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Module contents
+---------------
+
+.. automodule:: inorbit_edge
+   :members:
+   :undoc-members:
+   :show-inheritance:
