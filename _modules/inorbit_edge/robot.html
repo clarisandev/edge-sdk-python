@@ -92,6 +92,8 @@
 <span></span><span class="ch">#!/usr/bin/env python</span>
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
+
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
 <span class="kn">from</span> <span class="nn">inorbit_edge</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">inorbit_edge_version</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -100,7 +102,7 @@
 <span class="kn">import</span> <span class="nn">socks</span>
 <span class="kn">import</span> <span class="nn">ssl</span>
 <span class="kn">import</span> <span class="nn">threading</span>
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+<span class="kn">import</span> <span class="nn">requests</span>
 
 <span class="n">INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL</span> <span class="o">=</span> <span class="s2">&quot;https://control.inorbit.ai/cloud_sdk_robot_config&quot;</span>
 
@@ -175,7 +177,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">on_connect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_connect</span>
 
     <span class="k">def</span> <span class="nf">_fetch_robot_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+        <span class="sd">&quot;&quot;&quot;Gets robot config by posting appkey and robot/agent info.</span>
+<span class="sd">        All params are provided on the RobotSession constructor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Fetching config for robot </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">))</span>
+        <span class="c1"># get params from self</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;appKey&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span>
+            <span class="s2">&quot;robotId&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">,</span>
+            <span class="s2">&quot;hostname&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_name</span><span class="p">,</span>
+            <span class="s2">&quot;agentVersion&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_version</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># post request to fetch robot config</span>
+        <span class="n">response</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">params</span><span class="p">)</span>
+        <span class="n">response</span><span class="o">.</span><span class="n">raise_for_status</span><span class="p">()</span>
+
+        <span class="c1"># TODO: validate fetched config</span>
+        <span class="k">return</span> <span class="n">response</span><span class="o">.</span><span class="n">json</span><span class="p">()</span>
 
 <div class="viewcode-block" id="RobotSession.on_connect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.on_connect">[docs]</a>    <span class="k">def</span> <span class="nf">on_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">userdata</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;MQTT client connect callback.</span>
@@ -263,17 +282,13 @@
 
 <div class="viewcode-block" id="RobotSession.connect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Configures MQTT client and connect to the service.&quot;&quot;&quot;</span>
-        <span class="c1"># TODO: call _fetch_robot_config. Assuming it returns a dict</span>
-        <span class="n">robot_config</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;hostname&quot;</span><span class="p">:</span> <span class="s2">&quot;localdev.com&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">1883</span><span class="p">,</span>
-            <span class="s2">&quot;protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;mqtt://&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;websocket_port&quot;</span><span class="p">:</span> <span class="mi">9001</span><span class="p">,</span>
-            <span class="s2">&quot;websocket_protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;ws://&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;xajaratiqu&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;VAlXvj57BFAO7qHU&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;robotApiKey&quot;</span><span class="p">:</span> <span class="s2">&quot;H_2QCEQz6pD7i7xF&quot;</span><span class="p">,</span>
-        <span class="p">}</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">robot_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fetch_robot_config</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Failed to fetch config for robot </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">raise</span>
 
         <span class="c1"># Use username and password authentication</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">])</span>
