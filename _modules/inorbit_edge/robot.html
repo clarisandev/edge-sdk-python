@@ -49,6 +49,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../inorbit_edge.html">inorbit_edge package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge.example">inorbit_edge.example module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#inorbit-edge-main-module">inorbit_edge.main module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge.robot">inorbit_edge.robot module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge">Module contents</a></li>
 </ul>
@@ -92,36 +93,234 @@
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
 <span class="kn">from</span> <span class="nn">inorbit_edge</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">inorbit_edge_version</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">paho.mqtt.client</span> <span class="k">as</span> <span class="nn">mqtt</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlsplit</span>
+<span class="kn">import</span> <span class="nn">socks</span>
+<span class="kn">import</span> <span class="nn">ssl</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
+
+<span class="n">INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL</span> <span class="o">=</span> <span class="s2">&quot;https://control.inorbit.ai/cloud_sdk_robot_config&quot;</span>
 
 
 <div class="viewcode-block" id="RobotSession"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession">[docs]</a><span class="k">class</span> <span class="nc">RobotSession</span><span class="p">:</span>
-    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span><span class="p">,</span> <span class="n">app_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span><span class="p">,</span> <span class="n">api_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
         <span class="sd">&quot;&quot;&quot;Initialize a robot session.</span>
 
 <span class="sd">        Args:</span>
-<span class="sd">            robot_id (str): ID of the robot</span>
-<span class="sd">            robot_name (str): Robot name</span>
-<span class="sd">            agent_version (str): Agent Version</span>
-<span class="sd">            app_key (str): Application key for authenticating against InOrbit</span>
-<span class="sd">            endpoint ([type]): InOrbit URL</span>
+<span class="sd">            robot_id (str): ID of the robot.</span>
+<span class="sd">            robot_name (str): Robot name.</span>
+<span class="sd">            api_key (str): API key for authenticating against InOrbit Cloud services.</span>
+<span class="sd">            endpoint (str): InOrbit URL. Defaults: INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL.</span>
+<span class="sd">            use_ssl (bool): Configures MQTT client to use SSL. Defaults: True.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span> <span class="o">=</span> <span class="n">robot_id</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">robot_name</span> <span class="o">=</span> <span class="n">robot_name</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">app_key</span> <span class="o">=</span> <span class="n">app_key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span> <span class="o">=</span> <span class="n">api_key</span>
+        <span class="c1"># The agent version is generated based on the InOrbit Edge SDK version</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">agent_version</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">inorbit_edge_version</span><span class="si">}</span><span class="s2">.edgesdk_py&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-            <span class="s2">&quot;endpoint&quot;</span><span class="p">,</span> <span class="s2">&quot;https://control.inorbit.ai/cloud_sdk_robot_config&quot;</span>
-        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">endpoint</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;endpoint&quot;</span><span class="p">,</span> <span class="n">INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL</span><span class="p">)</span>
+
+        <span class="c1"># Use SSL by default</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_ssl</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;use_ssl&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Use TCP transport by default. The client will use websockets</span>
+        <span class="c1"># transport if the environment variable HTTP_PROXY is set.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_websockets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;use_websockets&quot;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Read optional proxy configuration from environment variables</span>
+        <span class="c1"># We use ``self.http_proxy`` to indicate if proxy configuration should be used.</span>
+        <span class="c1"># TODO: enable explicit proxy configuration on ``RobotSession`` constructor.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getenv</span><span class="p">(</span><span class="s2">&quot;HTTP_PROXY&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span> <span class="o">==</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Found empty HTTP_PROXY variable. Ignoring.&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Found HTTP_PROXY environment configuration = </span><span class="si">{:}</span><span class="s2">. &quot;</span>
+                <span class="s2">&quot;Will use WebSockets transport.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">use_websockets</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># Create mqtt client</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_websockets</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">mqtt</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">protocol</span><span class="o">=</span><span class="n">mqtt</span><span class="o">.</span><span class="n">MQTTv311</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="s2">&quot;websockets&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;MQTT client created using websockets transport&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">mqtt</span><span class="o">.</span><span class="n">Client</span><span class="p">(</span><span class="n">protocol</span><span class="o">=</span><span class="n">mqtt</span><span class="o">.</span><span class="n">MQTTv311</span><span class="p">,</span> <span class="n">transport</span><span class="o">=</span><span class="s2">&quot;tcp&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;MQTT client created using tcp transport&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Configure proxy hostname and port if necessary</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">parts</span> <span class="o">=</span> <span class="n">urlsplit</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">http_proxy</span><span class="p">)</span>
+            <span class="n">proxy_hostname</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">hostname</span>
+            <span class="n">proxy_port</span> <span class="o">=</span> <span class="n">parts</span><span class="o">.</span><span class="n">port</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">proxy_port</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Empty proxy port. Is &#39;HTTP_PROXY&#39; correct?&quot;</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+                <span class="s2">&quot;Configuring client proxy: </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">proxy_hostname</span><span class="p">,</span> <span class="n">proxy_port</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">proxy_set</span><span class="p">(</span>
+                <span class="n">proxy_type</span><span class="o">=</span><span class="n">socks</span><span class="o">.</span><span class="n">HTTP</span><span class="p">,</span> <span class="n">proxy_addr</span><span class="o">=</span><span class="n">proxy_hostname</span><span class="p">,</span> <span class="n">proxy_port</span><span class="o">=</span><span class="n">proxy_port</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Register callbacks</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">on_connect</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">on_connect</span>
 
     <span class="k">def</span> <span class="nf">_fetch_robot_config</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
-<div class="viewcode-block" id="RobotSession.connect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+<div class="viewcode-block" id="RobotSession.on_connect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.on_connect">[docs]</a>    <span class="k">def</span> <span class="nf">on_connect</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">client</span><span class="p">,</span> <span class="n">userdata</span><span class="p">,</span> <span class="n">flags</span><span class="p">,</span> <span class="n">rc</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;MQTT client connect callback.</span>
 
-<div class="viewcode-block" id="RobotSession.publish"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish">[docs]</a>    <span class="k">def</span> <span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">options</span><span class="p">):</span>
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+<span class="sd">        Args:</span>
+<span class="sd">            client:     the client instance for this callback</span>
+<span class="sd">            userdata:   the private user data as set in Client() or userdata_set()</span>
+<span class="sd">            flags:      response flags sent by the broker</span>
+<span class="sd">            rc:         the connection result</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Only assume that the robot is connected if return code is 0.</span>
+        <span class="c1"># Other values are taken as errors (check here:</span>
+        <span class="c1"># http://docs.oasis-open.org/mqtt/mqtt/v3.1.1/os/mqtt-v3.1.1-os.html#_Toc398718035)</span>
+        <span class="c1"># so connection process needs to be aborted.</span>
+        <span class="k">if</span> <span class="n">rc</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Connected to MQTT&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Unable to connect. rc = </span><span class="si">{:d}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">rc</span><span class="p">))</span>
+            <span class="k">return</span>
+
+        <span class="c1"># Send robot online status.</span>
+        <span class="c1"># This method is blocking so do it on a separate thread just in case.</span>
+        <span class="n">threading</span><span class="o">.</span><span class="n">Thread</span><span class="p">(</span>
+            <span class="n">target</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">send_robot_status</span><span class="p">,</span> <span class="n">kwargs</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;robot_status&quot;</span><span class="p">:</span> <span class="s2">&quot;1&quot;</span><span class="p">}</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">start</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RobotSession.send_robot_status"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.send_robot_status">[docs]</a>    <span class="k">def</span> <span class="nf">send_robot_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_status</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sends robot online/offline status message.</span>
+
+<span class="sd">        This method blocks until either the message</span>
+<span class="sd">        is sent or the client errors out.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            robot_status (Union[bool,str]): Connection status</span>
+<span class="sd">                It supports ``bool`` and ``str`` values (&quot;0&quot; or &quot;1&quot;)</span>
+
+<span class="sd">        Raises:</span>
+<span class="sd">            ValueError: on invalid ``robot_status``</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Validate ``robot_status`` parameter.</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">robot_status</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+            <span class="n">robot_status</span> <span class="o">=</span> <span class="s2">&quot;1&quot;</span> <span class="k">if</span> <span class="n">robot_status</span> <span class="k">else</span> <span class="s2">&quot;0&quot;</span>
+
+        <span class="k">if</span> <span class="n">robot_status</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;0&quot;</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Robot status must be boolean, &#39;0&#39; or &#39;1&#39;&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Every time we connect or disconnect to the service, send</span>
+        <span class="c1"># updated status including online/offline bit</span>
+        <span class="n">status_message</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">|</span><span class="si">{}</span><span class="s2">|</span><span class="si">{}</span><span class="s2">|</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="n">robot_status</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">agent_version</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_name</span>
+        <span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="s2">&quot;r/</span><span class="si">{}</span><span class="s2">/state&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">),</span> <span class="n">status_message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Publishing status </span><span class="si">{}</span><span class="s2">. ret = </span><span class="si">{}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">robot_status</span><span class="p">,</span> <span class="n">ret</span><span class="p">))</span>
+
+        <span class="c1"># TODO: handle errors while waiting for publish. Consider that</span>
+        <span class="c1"># this method would tipically run on a separate thread.</span>
+        <span class="n">ret</span><span class="o">.</span><span class="n">wait_for_publish</span><span class="p">()</span>
+        <span class="n">published</span> <span class="o">=</span> <span class="n">ret</span><span class="o">.</span><span class="n">is_published</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;Robot status &#39;</span><span class="si">{}</span><span class="s2">&#39; published: </span><span class="si">{:b}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">robot_status</span><span class="p">,</span> <span class="n">published</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_is_connected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_is_disconnected</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">is_connected</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_wait_for_connection_state</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">state_func</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">5</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                <span class="s2">&quot;Waiting for MQTT connection state &#39;</span><span class="si">{}</span><span class="s2">&#39; ...&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">state_func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="n">sleep</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">state_func</span><span class="p">():</span>
+                <span class="k">return</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span>
+            <span class="s2">&quot;Connection state never reached: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">state_func</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="RobotSession.connect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.connect">[docs]</a>    <span class="k">def</span> <span class="nf">connect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configures MQTT client and connect to the service.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: call _fetch_robot_config. Assuming it returns a dict</span>
+        <span class="n">robot_config</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s2">&quot;hostname&quot;</span><span class="p">:</span> <span class="s2">&quot;localdev.com&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="mi">1883</span><span class="p">,</span>
+            <span class="s2">&quot;protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;mqtt://&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;websocket_port&quot;</span><span class="p">:</span> <span class="mi">9001</span><span class="p">,</span>
+            <span class="s2">&quot;websocket_protocol&quot;</span><span class="p">:</span> <span class="s2">&quot;ws://&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;username&quot;</span><span class="p">:</span> <span class="s2">&quot;xajaratiqu&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;password&quot;</span><span class="p">:</span> <span class="s2">&quot;VAlXvj57BFAO7qHU&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;robotApiKey&quot;</span><span class="p">:</span> <span class="s2">&quot;H_2QCEQz6pD7i7xF&quot;</span><span class="p">,</span>
+        <span class="p">}</span>
+
+        <span class="c1"># Use username and password authentication</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">username_pw_set</span><span class="p">(</span><span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;username&quot;</span><span class="p">],</span> <span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;password&quot;</span><span class="p">])</span>
+
+        <span class="c1"># Configure &quot;will&quot; message to ensure the robot state</span>
+        <span class="c1"># is set to offline if connection is interrupted</span>
+        <span class="n">will_topic</span> <span class="o">=</span> <span class="s2">&quot;r/</span><span class="si">{}</span><span class="s2">/state&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">)</span>
+        <span class="n">will_payload</span> <span class="o">=</span> <span class="s2">&quot;0|</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api_key</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">will_set</span><span class="p">(</span><span class="n">will_topic</span><span class="p">,</span> <span class="n">will_payload</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># TODO: add support for user-provided CA certificate file.</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_ssl</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Configuring client to use SSL&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">tls_set</span><span class="p">(</span>
+                <span class="s2">&quot;/etc/ssl/certs/ca-certificates.crt&quot;</span><span class="p">,</span> <span class="n">tls_version</span><span class="o">=</span><span class="n">ssl</span><span class="o">.</span><span class="n">PROTOCOL_TLSv1_2</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Configure MQTT client hostname and port</span>
+        <span class="n">hostname</span> <span class="o">=</span> <span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;hostname&quot;</span><span class="p">]</span>
+        <span class="n">port</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;websockets_port&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_websockets</span>
+            <span class="k">else</span> <span class="n">robot_config</span><span class="p">[</span><span class="s2">&quot;port&quot;</span><span class="p">]</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="n">keepalive</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">loop_start</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wait_for_connection_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_connected</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="s2">&quot;MQTT connection initiated. </span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2"> (</span><span class="si">{}</span><span class="s2">)&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">hostname</span><span class="p">,</span> <span class="n">port</span><span class="p">,</span> <span class="s2">&quot;websockets&quot;</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_websockets</span> <span class="k">else</span> <span class="s2">&quot;MQTT&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="RobotSession.disconnect"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.disconnect">[docs]</a>    <span class="k">def</span> <span class="nf">disconnect</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ends session, disconnecting from cloud services&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Ending robot session&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">send_robot_status</span><span class="p">(</span><span class="n">robot_status</span><span class="o">=</span><span class="s2">&quot;0&quot;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_wait_for_connection_state</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_is_disconnected</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Disconnected from MQTT broker&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RobotSession.publish"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish">[docs]</a>    <span class="k">def</span> <span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="n">qos</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="n">retain</span><span class="p">)</span></div></div>
 </pre></div>
 
            </div>

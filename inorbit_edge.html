@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">inorbit_edge package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge.example">inorbit_edge.example module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#inorbit-edge-main-module">inorbit_edge.main module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge.robot">inorbit_edge.robot module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge">Module contents</a></li>
 </ul>
@@ -175,30 +176,70 @@ order.</p>
 </dd></dl>
 
 </section>
+<section id="inorbit-edge-main-module">
+<h2>inorbit_edge.main module<a class="headerlink" href="#inorbit-edge-main-module" title="Permalink to this headline"></a></h2>
+</section>
 <section id="module-inorbit_edge.robot">
 <span id="inorbit-edge-robot-module"></span><h2>inorbit_edge.robot module<a class="headerlink" href="#module-inorbit_edge.robot" title="Permalink to this headline"></a></h2>
 <dl class="py class">
 <dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">inorbit_edge.robot.</span></span><span class="sig-name descname"><span class="pre">RobotSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">app_key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession" title="Permalink to this definition"></a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">inorbit_edge.robot.</span></span><span class="sig-name descname"><span class="pre">RobotSession</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">api_key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Initialize a robot session.</p>
 <dl class="simple">
-<dt>Args:</dt><dd><p>robot_id (str): ID of the robot
-robot_name (str): Robot name
-agent_version (str): Agent Version
-app_key (str): Application key for authenticating against InOrbit
-endpoint ([type]): InOrbit URL</p>
+<dt>Args:</dt><dd><p>robot_id (str): ID of the robot.
+robot_name (str): Robot name.
+api_key (str): API key for authenticating against InOrbit Cloud services.
+endpoint (str): InOrbit URL. Defaults: INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL.
+use_ssl (bool): Configures MQTT client to use SSL. Defaults: True.</p>
 </dd>
 </dl>
 <dl class="py method">
 <dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.connect">
 <span class="sig-name descname"><span class="pre">connect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.connect" title="Permalink to this definition"></a></dt>
-<dd></dd></dl>
+<dd><p>Configures MQTT client and connect to the service.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.disconnect">
+<span class="sig-name descname"><span class="pre">disconnect</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.disconnect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.disconnect" title="Permalink to this definition"></a></dt>
+<dd><p>Ends session, disconnecting from cloud services</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.on_connect">
+<span class="sig-name descname"><span class="pre">on_connect</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">client</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">userdata</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flags</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.on_connect"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.on_connect" title="Permalink to this definition"></a></dt>
+<dd><p>MQTT client connect callback.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><p>client:     the client instance for this callback
+userdata:   the private user data as set in Client() or userdata_set()
+flags:      response flags sent by the broker
+rc:         the connection result</p>
+</dd>
+</dl>
+</dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.publish">
-<span class="sig-name descname"><span class="pre">publish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">options</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.publish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.publish" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">publish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.publish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.publish" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.send_robot_status">
+<span class="sig-name descname"><span class="pre">send_robot_status</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_status</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.send_robot_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.send_robot_status" title="Permalink to this definition"></a></dt>
+<dd><p>Sends robot online/offline status message.</p>
+<p>This method blocks until either the message
+is sent or the client errors out.</p>
+<dl class="simple">
+<dt>Args:</dt><dd><dl class="simple">
+<dt>robot_status (Union[bool,str]): Connection status</dt><dd><p>It supports <code class="docutils literal notranslate"><span class="pre">bool</span></code> and <code class="docutils literal notranslate"><span class="pre">str</span></code> values (“0” or “1”)</p>
+</dd>
+</dl>
+</dd>
+<dt>Raises:</dt><dd><p>ValueError: on invalid <code class="docutils literal notranslate"><span class="pre">robot_status</span></code></p>
+</dd>
+</dl>
+</dd></dl>
 
 </dd></dl>
 
