@@ -52,6 +52,7 @@
 <li class="toctree-l2 current"><a class="current reference internal" href="#">inorbit_edge package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge.example">inorbit_edge.example module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge.inorbit_pb2">inorbit_edge.inorbit_pb2 module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#inorbit-edge-main-module">inorbit_edge.main module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge.robot">inorbit_edge.robot module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#module-inorbit_edge">Module contents</a></li>
@@ -176,6 +177,9 @@ order.</p>
 </dd></dl>
 
 </section>
+<section id="module-inorbit_edge.inorbit_pb2">
+<span id="inorbit-edge-inorbit-pb2-module"></span><h2>inorbit_edge.inorbit_pb2 module<a class="headerlink" href="#module-inorbit_edge.inorbit_pb2" title="Permalink to this headline"></a></h2>
+</section>
 <section id="inorbit-edge-main-module">
 <h2>inorbit_edge.main module<a class="headerlink" href="#inorbit-edge-main-module" title="Permalink to this headline"></a></h2>
 </section>
@@ -222,6 +226,16 @@ rc:         the connection result</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.publish">
 <span class="sig-name descname"><span class="pre">publish</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">topic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.publish"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.publish" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.publish_pose">
+<span class="sig-name descname"><span class="pre">publish_pose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">yaw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">frame_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'map'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.publish_pose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.publish_pose" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSession.publish_protobuf">
+<span class="sig-name descname"><span class="pre">publish_protobuf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">subtopic</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">message</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">qos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">retain</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSession.publish_protobuf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSession.publish_protobuf" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py method">

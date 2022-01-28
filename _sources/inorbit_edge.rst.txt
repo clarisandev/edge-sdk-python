@@ -12,6 +12,14 @@ inorbit\_edge.example module
    :undoc-members:
    :show-inheritance:
 
+inorbit\_edge.inorbit\_pb2 module
+---------------------------------
+
+.. automodule:: inorbit_edge.inorbit_pb2
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 inorbit\_edge.main module
 -------------------------
 

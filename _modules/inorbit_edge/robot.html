@@ -49,6 +49,7 @@
 <li class="toctree-l2"><a class="reference internal" href="../../inorbit_edge.html">inorbit_edge package</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#submodules">Submodules</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge.example">inorbit_edge.example module</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge.inorbit_pb2">inorbit_edge.inorbit_pb2 module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#inorbit-edge-main-module">inorbit_edge.main module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge.robot">inorbit_edge.robot module</a></li>
 <li class="toctree-l3"><a class="reference internal" href="../../inorbit_edge.html#module-inorbit_edge">Module contents</a></li>
@@ -93,7 +94,6 @@
 <span class="c1"># -*- coding: utf-8 -*-</span>
 
 
-<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
 <span class="kn">from</span> <span class="nn">inorbit_edge</span> <span class="kn">import</span> <span class="n">__version__</span> <span class="k">as</span> <span class="n">inorbit_edge_version</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -102,9 +102,15 @@
 <span class="kn">import</span> <span class="nn">socks</span>
 <span class="kn">import</span> <span class="nn">ssl</span>
 <span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">inorbit_edge.inorbit_pb2</span> <span class="kn">import</span> <span class="n">LocationAndPoseMessage</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">time</span>
+<span class="kn">from</span> <span class="nn">time</span> <span class="kn">import</span> <span class="n">sleep</span>
 <span class="kn">import</span> <span class="nn">requests</span>
 
+
 <span class="n">INORBIT_CLOUD_SDK_ROBOT_CONFIG_URL</span> <span class="o">=</span> <span class="s2">&quot;https://control.inorbit.ai/cloud_sdk_robot_config&quot;</span>
+
+<span class="n">MQTT_POSE_TOPIC</span> <span class="o">=</span> <span class="s2">&quot;ros/loc/data2&quot;</span>
 
 
 <div class="viewcode-block" id="RobotSession"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession">[docs]</a><span class="k">class</span> <span class="nc">RobotSession</span><span class="p">:</span>
@@ -335,7 +341,24 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Disconnected from MQTT broker&quot;</span><span class="p">)</span></div>
 
 <div class="viewcode-block" id="RobotSession.publish"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish">[docs]</a>    <span class="k">def</span> <span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="n">qos</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="n">retain</span><span class="p">)</span></div></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="n">qos</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="n">retain</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RobotSession.publish_protobuf"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish_protobuf">[docs]</a>    <span class="k">def</span> <span class="nf">publish_protobuf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">subtopic</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+        <span class="n">topic</span> <span class="o">=</span> <span class="s2">&quot;r/</span><span class="si">{}</span><span class="s2">/</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_id</span><span class="p">,</span> <span class="n">subtopic</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s2">&quot;Publishing to topic </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">topic</span><span class="p">))</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span>
+            <span class="n">topic</span><span class="p">,</span> <span class="nb">bytearray</span><span class="p">(</span><span class="n">message</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()),</span> <span class="n">qos</span><span class="o">=</span><span class="n">qos</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="n">retain</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="RobotSession.publish_pose"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish_pose">[docs]</a>    <span class="k">def</span> <span class="nf">publish_pose</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">yaw</span><span class="p">,</span> <span class="n">frame_id</span><span class="o">=</span><span class="s2">&quot;map&quot;</span><span class="p">,</span> <span class="n">ts</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="n">LocationAndPoseMessage</span><span class="p">()</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">ts</span> <span class="o">=</span> <span class="n">ts</span> <span class="k">if</span> <span class="n">ts</span> <span class="k">else</span> <span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="p">()</span> <span class="o">*</span> <span class="mi">1000</span><span class="p">)</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">pos_x</span> <span class="o">=</span> <span class="n">x</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">pos_y</span> <span class="o">=</span> <span class="n">y</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">yaw</span> <span class="o">=</span> <span class="n">yaw</span>
+        <span class="n">message</span><span class="o">.</span><span class="n">frame_id</span> <span class="o">=</span> <span class="n">frame_id</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">publish_protobuf</span><span class="p">(</span><span class="n">MQTT_POSE_TOPIC</span><span class="p">,</span> <span class="n">message</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="RobotSessionFactory"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionFactory">[docs]</a><span class="k">class</span> <span class="nc">RobotSessionFactory</span><span class="p">:</span>
