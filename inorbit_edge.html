@@ -243,6 +243,63 @@ is sent or the client errors out.</p>
 
 </dd></dl>
 
+<dl class="py class">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionFactory">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">inorbit_edge.robot.</span></span><span class="sig-name descname"><span class="pre">RobotSessionFactory</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">robot_session_kw_args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionFactory"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionFactory" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Builds RobotSession objects using provided</p>
+<p>Configures this factory with the arguments to pass to the
+constructor of instances.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionFactory.build">
+<span class="sig-name descname"><span class="pre">build</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionFactory.build"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionFactory.build" title="Permalink to this definition"></a></dt>
+<dd><p>Builds a RobotSession object using the provided id and name.
+It also passes the  robot_session_kw_args set when creating the factory to the
+RobotSession constructor.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionPool">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">inorbit_edge.robot.</span></span><span class="sig-name descname"><span class="pre">RobotSessionPool</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_session_factory</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionPool"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionPool" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Pool of robot sessions that handles connections for many robots in an
+efficient way</p>
+<p>Creates the pool
+Args:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>robot_session_factory: factory used to build individual RobotSession</p></li>
+</ul>
+<p>objects</p>
+</div></blockquote>
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionPool.free_robot_session">
+<span class="sig-name descname"><span class="pre">free_robot_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionPool.free_robot_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionPool.free_robot_session" title="Permalink to this definition"></a></dt>
+<dd><p>Destroys a RobotSession in this pool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionPool.get_session">
+<span class="sig-name descname"><span class="pre">get_session</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">robot_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionPool.get_session"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionPool.get_session" title="Permalink to this definition"></a></dt>
+<dd><p>Returns a connected RobotSession for the specified robot</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionPool.has_robot">
+<span class="sig-name descname"><span class="pre">has_robot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">robot_id</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionPool.has_robot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionPool.has_robot" title="Permalink to this definition"></a></dt>
+<dd><p>Checks if a RobotSession for a specific robot exists in this pool</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="inorbit_edge.robot.RobotSessionPool.tear_down">
+<span class="sig-name descname"><span class="pre">tear_down</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/inorbit_edge/robot.html#RobotSessionPool.tear_down"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#inorbit_edge.robot.RobotSessionPool.tear_down" title="Permalink to this definition"></a></dt>
+<dd><p>Destroys all RobotSession in this pool</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-inorbit_edge">
 <span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-inorbit_edge" title="Permalink to this headline"></a></h2>

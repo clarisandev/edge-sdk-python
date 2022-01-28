@@ -336,6 +336,71 @@
 
 <div class="viewcode-block" id="RobotSession.publish"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSession.publish">[docs]</a>    <span class="k">def</span> <span class="nf">publish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">topic</span><span class="p">,</span> <span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">publish</span><span class="p">(</span><span class="n">topic</span><span class="o">=</span><span class="n">topic</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">message</span><span class="p">,</span> <span class="n">qos</span><span class="o">=</span><span class="n">qos</span><span class="p">,</span> <span class="n">retain</span><span class="o">=</span><span class="n">retain</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RobotSessionFactory"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionFactory">[docs]</a><span class="k">class</span> <span class="nc">RobotSessionFactory</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Builds RobotSession objects using provided&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">robot_session_kw_args</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Configures this factory with the arguments to pass to the</span>
+<span class="sd">        constructor of instances.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot_session_kw_args</span> <span class="o">=</span> <span class="n">robot_session_kw_args</span>
+
+<div class="viewcode-block" id="RobotSessionFactory.build"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionFactory.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Builds a RobotSession object using the provided id and name.</span>
+<span class="sd">        It also passes the  robot_session_kw_args set when creating the factory to the</span>
+<span class="sd">        RobotSession constructor.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">RobotSession</span><span class="p">(</span><span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span><span class="p">,</span> <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">robot_session_kw_args</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RobotSessionPool"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionPool">[docs]</a><span class="k">class</span> <span class="nc">RobotSessionPool</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Pool of robot sessions that handles connections for many robots in an</span>
+<span class="sd">    efficient way&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_session_factory</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Creates the pool</span>
+<span class="sd">        Args:</span>
+<span class="sd">          - robot_session_factory: factory used to build individual RobotSession</span>
+<span class="sd">          objects</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot_session_factory</span> <span class="o">=</span> <span class="n">robot_session_factory</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getting_session_mutex</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<div class="viewcode-block" id="RobotSessionPool.get_session"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionPool.get_session">[docs]</a>    <span class="k">def</span> <span class="nf">get_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns a connected RobotSession for the specified robot&quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">getting_session_mutex</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># mutext to avoid the case of asking for the same robot twice and</span>
+            <span class="c1"># opening 2 connections</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_robot</span><span class="p">(</span><span class="n">robot_id</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span><span class="p">[</span><span class="n">robot_id</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_session_factory</span><span class="o">.</span><span class="n">build</span><span class="p">(</span>
+                    <span class="n">robot_id</span><span class="p">,</span> <span class="n">robot_name</span>
+                <span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span><span class="p">[</span><span class="n">robot_id</span><span class="p">]</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span><span class="p">[</span><span class="n">robot_id</span><span class="p">]</span>
+        <span class="k">finally</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">getting_session_mutex</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="RobotSessionPool.tear_down"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionPool.tear_down">[docs]</a>    <span class="k">def</span> <span class="nf">tear_down</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Destroys all RobotSession in this pool&quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">rs</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+            <span class="n">rs</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span> <span class="o">=</span> <span class="p">{}</span></div>
+
+<div class="viewcode-block" id="RobotSessionPool.has_robot"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionPool.has_robot">[docs]</a>    <span class="k">def</span> <span class="nf">has_robot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Checks if a RobotSession for a specific robot exists in this pool&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">robot_id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span></div>
+
+<div class="viewcode-block" id="RobotSessionPool.free_robot_session"><a class="viewcode-back" href="../../inorbit_edge.html#inorbit_edge.robot.RobotSessionPool.free_robot_session">[docs]</a>    <span class="k">def</span> <span class="nf">free_robot_session</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">robot_id</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Destroys a RobotSession in this pool&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_robot</span><span class="p">(</span><span class="n">robot_id</span><span class="p">):</span>
+            <span class="k">return</span>
+        <span class="n">sess</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_session</span><span class="p">(</span><span class="n">robot_id</span><span class="p">)</span>
+        <span class="n">sess</span><span class="o">.</span><span class="n">disconnect</span><span class="p">()</span>
+        <span class="k">del</span> <span class="bp">self</span><span class="o">.</span><span class="n">robot_sessions</span><span class="p">[</span><span class="n">robot_id</span><span class="p">]</span></div></div>
 </pre></div>
 
            </div>
