@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+
 import logging
 import datetime
 from time import sleep
@@ -44,7 +45,7 @@ def publish_robot_map(inorbit_api_url, inorbit_api_key, robot_id, map_file):
 
 
 class FakeRobot:
-    """Class that simulates robot data and generates random data"""
+    """Class that simulates robot data and generates new poses"""
 
     def __init__(self, robot_id, robot_name) -> None:
         self.logger = logging.getLogger(__class__.__name__)
@@ -52,11 +53,11 @@ class FakeRobot:
         self.robot_name = robot_name
 
         # Set initial x, y position and yaw
-        if(robot_id == "testing0"):
+        if(robot_id == "mars"):
             self.x = 8
             self.y = 10
             self.yaw = -5.2
-        if(robot_id == "testing1"):
+        if(robot_id == "moon"):
             self.x = 2
             self.y = 15
             self.yaw = -6.3
@@ -64,7 +65,7 @@ class FakeRobot:
         self.cpu = 0
         self.battery = 0
         self.status = "Idle"
-        self.collapse = 0
+        self.collide = 0
         # # Initialize odometry data
         # self.linear_distance = 0
         # self.angular_distance = 0
@@ -72,12 +73,12 @@ class FakeRobot:
         # self.angular_speed = 0
 
     def move(self):
-        """Modifies robot data using values generated randomly"""
-        if(robot_id == "testing0"):
+        """Modifies robot data using values"""
+        if(robot_id == "mars"):
             x_delta = 0.25
             y_delta = 0.25
             yaw_delta = 1
-        if(robot_id == "testing1"):
+        if(robot_id == "moon"):
             x_delta = 0.53
             y_delta = 0
             yaw_delta = 1
@@ -86,7 +87,7 @@ class FakeRobot:
         if self.x + x_delta < MAX_X and self.x + x_delta > 0:
             self.x = self.x + x_delta
         else:
-            self.collapse = 1
+            self.collide = 1
 
         # Ignore position update if the new coordinate exceeds y limits
         if self.y + y_delta < MAX_Y and self.y + y_delta > 0:
@@ -130,13 +131,15 @@ if __name__ == "__main__":
 
     # Dictionary mapping robot ID and fake robot object
     fake_robot_pool = dict()
-    i=0
-    # i = 0
-    # Create fake robots and populate `fake_robot_pool` dictionary
+    i = 0
+    # Create 2 fake robots and populate `fake_robot_pool` dictionary
     for i in range(NUM_ROBOTS_LOCATION):
-        robot_id = "testing{}".format(i)
+        if (i == 0):
+            robot_id = "mars"
+        else:
+            robot_id = "moon"
         robot_session = robot_session_pool.get_session(
-            robot_id=robot_id, robot_name=robot_id
+            robot_id=robot_id, robot_name=robot_id.capitalize()
         )
         fake_robot_pool[robot_id] = FakeRobot(robot_id=robot_id, robot_name=robot_id)
         publish_robot_map(
@@ -148,7 +151,7 @@ if __name__ == "__main__":
             ),
         )
     i = 0
-    # Go through every fake robot and simulate robot movement
+    # Go through both fake robots and simulate robot movement until they are about to collide
     while (i == 0):
         for robot_id, fake_robot in fake_robot_pool.items():
                 fake_robot.move()
@@ -162,10 +165,7 @@ if __name__ == "__main__":
                         "battery": fake_robot.battery,
                         "status": fake_robot.status,
                         "cpu": fake_robot.cpu,
-                        "collapse": fake_robot.collapse
+                        "collide": fake_robot.collide
                     }
                 )
-        if(fake_robot.collapse == 1):
-            break
-        else:
-            sleep(1)
+        sleep(1)
