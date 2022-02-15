@@ -103,7 +103,7 @@ class FakeRobot:
         self.status = "Mission" if random() > 0.5 else "Idle"
         # Generate a random float value for cpu usage
         self.cpu = random() * 100
-
+        self.demo_robot = 'demo_robot'
 
         self.logger.debug(
             "New position x={}, y={}, yaw={}".format(self.x, self.y, self.yaw)
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     robot_session_factory = RobotSessionFactory(
         endpoint=inorbit_api_endpoint,
         api_key=inorbit_api_key,
-        use_ssl=False if inorbit_api_use_ssl == "false" else True,
+        use_ssl=False if inorbit_api_use_ssl == "false" else True
     )
     robot_session_pool = RobotSessionPool(robot_session_factory)
 
@@ -165,7 +165,8 @@ if __name__ == "__main__":
                         "battery": fake_robot.battery,
                         "status": fake_robot.status,
                         "cpu": fake_robot.cpu,
-                        "collide": fake_robot.collide
+                        "collide": fake_robot.collide,
+                        "demo_robot": fake_robot.demo_robot
                     }
                 )
         sleep(1)
